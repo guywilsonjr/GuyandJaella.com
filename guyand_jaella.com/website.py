@@ -36,7 +36,35 @@ class WebsiteStack(core.Stack):
             'SiteCFIdentity'.format(id),
             cloud_front_origin_access_identity_config=cf.CfnCloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfigProperty(
                 comment='Website Origin Identity'))
-        s3_origin = cf.S3OriginConfig(
-            s3_bucket_source=site_bucket.bucket_name,
-            origin_access_identity_id=site_identity.attr_s3_canonical_user_id
+        '''
+        origin_stack = OriginStack(
+            self,
+            '{}Origin'.format(id),
+            site_bucket.bucket_name,
+            site_identity
         )
+        '''
+        origin = cf.S3OriginConfig(
+            s3_bucket_source=site_bucket,
+            origin_access_identity_id=site_identity.ref
+        )
+
+        cf.CloudFrontWebDistribution(
+            self,
+            '{}SiteDistribution'.format(id),
+
+            origin_configs=[
+                cf.SourceConfiguration(
+                    s3_origin_source=origin,
+                    behaviors=[
+                        cf.Behavior(
+                            allowed_methods=cf.CloudFrontAllowedMethods.GET_HEAD_OPTIONS,
+                            is_default_behavior=True,
+                            # TODO
+                            # https://github.com/guywilsonjr/GuyandJaella.com/issues/1
+                            compress=False,
+                            default_ttl=core.Duration.seconds(
+                                30),
+
+                        )])],
+            logging_config=cf.LoggingConfiguration(include_cookies=True))

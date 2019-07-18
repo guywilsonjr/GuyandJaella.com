@@ -3,6 +3,13 @@ from aws_cdk import core, aws_certificatemanager as cm, aws_route53 as r53, aws_
 import boto3
 
 
+basic_acm_permissions = [
+    'acm:ListCertificates',
+    'acm:RequestCertificate',
+    'acm:DescribeCertificate'
+]
+
+
 class FunctionStack(core.Stack):
 
     def set_minimal_policy(self, role):
@@ -57,10 +64,13 @@ class FunctionStack(core.Stack):
             code=lamb.Code.inline(code_txt),
             runtime=lamb.Runtime(
                 'python3.7',
-                supports_inline_code=True),
-            handler=handler,
-            environment=env,
-            tracing=lamb.Tracing.ACTIVE,
-            role=role)
+                supports_inline_code=True,
+                handler=handler,
+                environment=env,
+                tracing=lamb.Tracing.ACTIVE,
+                role=role
+            )
+        )
+
         self.name = function.function_name
         self.arn = function.function_arn
