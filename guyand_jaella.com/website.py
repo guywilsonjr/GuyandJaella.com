@@ -10,7 +10,7 @@ from aws_cdk import (
 from function_stack import FunctionStack
 
 
-class WebsiteStack(core.Stack):
+class Website(core.Stack):
 
     def __init__(
             self,
@@ -25,6 +25,17 @@ class WebsiteStack(core.Stack):
         site_bucket = s3.Bucket(
             self,
             '{}SiteBucket'.format(id),
+            bucket_name='www.{}'.format(domain),
+            website_error_document='README.md',
+            website_index_document='dashboard.html',
+            public_read_access=True,
+            removal_policy=core.RemovalPolicy.DESTROY,
+            cors=[rule]
+        )
+        redirect_bucket = s3.Bucket(
+            self,
+            '{}SiteRedirectBucket'.format(id),
+            bucket_name='{}'.format(domain),
             website_error_document='README.md',
             website_index_document='dashboard.html',
             public_read_access=True,

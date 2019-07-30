@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
 from aws_cdk import core
-from website import WebsiteStack
-from CertStack import CertStack
 import os
+from website import Website
 app = core.App()
+'''
 
-WebsiteStack(
+'''
+CERT_ARN = os.environ['SITE_CERT']
+Website(
     app,
     'GuyandJaella',
-    'GuyandJaella.com'
+    'guyandjaella.com'
 )
-
-
-CertStack(app, 'dacert', env=core.Environment(region='us-east-1'))
 app.synth()
