@@ -34,22 +34,19 @@ class Website(core.Stack):
             cors=[rule]
         )
         deployment_source = Source.asset('site/')
-        BucketDeployment(self, '{}BucketDeployment'.format(
-            id), site_bucket, source, retain_on_delete=False)
+        deployments.BucketDeployment(
+            self,
+            '{}BucketDeployment'.format(id),
+            destination_bucket=site_bucket,
+            source=deployment_source,
+            retain_on_delete=False)
 
         site_identity = cf.CfnCloudFrontOriginAccessIdentity(
             self,
             'SiteCFIdentity'.format(id),
             cloud_front_origin_access_identity_config=cf.CfnCloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfigProperty(
                 comment='Website Origin Identity'))
-        '''
-        origin_stack = OriginStack(
-            self,
-            '{}Origin'.format(id),
-            site_bucket.bucket_name,
-            site_identity
-        )
-        '''
+
         origin = cf.S3OriginConfig(
             s3_bucket_source=site_bucket,
             origin_access_identity_id=site_identity.ref
