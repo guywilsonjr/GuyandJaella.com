@@ -4,10 +4,12 @@ from aws_cdk import (
     aws_ec2 as ec2,
     aws_s3 as s3,
     aws_s3_assets as assets,
+    aws_s3_deployment as deployments,
     aws_cloudfront as cf
 
 )
 from function_stack import FunctionStack
+from aws_cdk.aws_s3_deployment import Source
 
 
 class Website(core.Stack):
@@ -25,23 +27,16 @@ class Website(core.Stack):
         site_bucket = s3.Bucket(
             self,
             '{}SiteBucket'.format(id),
-            bucket_name='www.{}'.format(domain),
             website_error_document='README.md',
             website_index_document='dashboard.html',
             public_read_access=True,
             removal_policy=core.RemovalPolicy.DESTROY,
             cors=[rule]
         )
-        redirect_bucket = s3.Bucket(
-            self,
-            '{}SiteRedirectBucket'.format(id),
-            bucket_name='{}'.format(domain),
-            website_error_document='README.md',
-            website_index_document='dashboard.html',
-            public_read_access=True,
-            removal_policy=core.RemovalPolicy.DESTROY,
-            cors=[rule]
-        )
+        deployment_source = Source.asset('site/')
+        BucketDeployment(self, '{}BucketDeployment'.format(
+            id), site_bucket, source, retain_on_delete=False)
+
         site_identity = cf.CfnCloudFrontOriginAccessIdentity(
             self,
             'SiteCFIdentity'.format(id),
