@@ -11,6 +11,7 @@ CERT_ARN = os.environ['SITE_CERT']
 Website(
     app,
     'GuyandJaella',
-    'guyandjaella.com'
+    'guyandjaella.com',
+    cert_arn=CERT_ARN
 )
 app.synth()
