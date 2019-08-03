@@ -33,7 +33,8 @@ class Website(core.Stack):
         self.id = id
         site_bucket = self.setup_site_bucket()
         distribution = self.create_s3_distirbution(site_bucket)
-        lambda_env = {'STATIC_DOMAIN': distribution.domain_name}
+        lambda_env = {
+            'STATIC_DOMAIN': '{}/dashboard.html'.format(distribution.domain_name)}
 
         function = self.create_lambda(
             code_file='function/site_function.py',
