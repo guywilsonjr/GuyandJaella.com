@@ -14,6 +14,7 @@ from aws_cdk.aws_apigateway import LambdaRestApi, RestApi, LambdaIntegration, En
 from aws_cdk.aws_iam import ServicePrincipal, Role
 from aws_cdk.aws_cloudfront import CloudFrontWebDistribution, CloudFrontAllowedMethods, Behavior, LoggingConfiguration, CfnCloudFrontOriginAccessIdentity, S3OriginConfig, SourceConfiguration
 from aws_cdk.aws_s3 import Bucket
+from aws_cdk.aws_s3_assets import Asset
 from aws_cdk.aws_certificatemanager import Certificate
 from aws_cdk.aws_route53 import ARecord, RecordTarget, HostedZone
 from aws_cdk.aws_route53_targets import ApiGatewayDomain
@@ -21,7 +22,8 @@ from aws_cdk.aws_route53_targets import ApiGatewayDomain
 
 class Website(core.Stack):
     api_resources = {
-        'Snakes': ['GET']
+        'Snakes': ['GET'],
+        'Home': ['GET']
     }
 
     def __init__(
@@ -34,7 +36,7 @@ class Website(core.Stack):
         site_bucket = self.setup_site_bucket()
         distribution = self.create_s3_distirbution(site_bucket)
         lambda_env = {
-            'STATIC_DOMAIN': '{}/dashboard.html'.format(distribution.domain_name)}
+            'STATIC_DOMAIN': '{}'.format(distribution.domain_name)}
 
         function = self.create_lambda(
             code_file='function/site_function.py',
@@ -102,6 +104,7 @@ class Website(core.Stack):
             self,
             '{}SiteDistribution'.format(
                 self.id),
+            default_root_object='dashboard.html',
             origin_configs=[
                 SourceConfiguration(
                     s3_origin_source=origin,
@@ -127,14 +130,16 @@ class Website(core.Stack):
             '{}FunctionRole'.format(self.id),
             assumed_by=ServicePrincipal('lambda.amazonaws.com'))
 
+        #function_code = Asset(self, '{}Code'.format(self.id), path='function/')
+
         with open('function/site_function.py', 'r') as code:
             code_txt = code.read()
             return Function(
                 self,
                 '{}Function'.format(self.id),
                 timeout=core.Duration.seconds(timeout),
-                code=Code.inline(code_txt),
-                handler='index.handler',
+                code=Code.inline('function/site_function.py'),
+                handler='site_function.handler',
                 environment=env,
                 tracing=Tracing.ACTIVE,
                 initial_policy=[MINIMAL_FUNCTION_POLICY_STATEMENT],
