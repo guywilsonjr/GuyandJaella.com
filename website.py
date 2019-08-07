@@ -138,7 +138,7 @@ class Website(core.Stack):
             '{}Function'.format(self.id),
             timeout=core.Duration.seconds(timeout),
             code=code,
-            handler='index.handler',
+            handler=handler,
             environment=env,
             tracing=Tracing.ACTIVE,
             initial_policy=[MINIMAL_FUNCTION_POLICY_STATEMENT],
