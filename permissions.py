@@ -8,7 +8,8 @@ MINIMAL_FUNCTION_ACTIONS = ['xray:PutTraceSegments',
                             'logs:DescribeLogStreams',
                             'logs:PutLogEvents',
                             'logs:GetLogEvents',
-                            'logs:FilterLogEvents'
+                            'logs:FilterLogEvents',
+                            'cloudwatch:PutMetricData'
                             ]
 DDB_ACTIONS = ['dynamodb:Scan', 'dynamodb:PutItem']
 API_INVOKE_STATEMENT_ACTION = 'execute-api:Invoke'

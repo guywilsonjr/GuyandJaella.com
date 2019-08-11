@@ -4,7 +4,9 @@ import urllib.request
 import asyncio
 import tracemalloc
 import logging
+import boto3
 from typing import List
+import time
 
 tracemalloc.start()
 HTTPS = 'https://'
@@ -12,10 +14,51 @@ logger = logging.getLogger()
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
+loop = asyncio.get_event_loop()
 
-async def https_get(url: str) -> str:
-    print('URL: {}'.format(url))
-    return urllib.request.urlopen(url).read().decode()
+METRICS = [('MainSite', 'Latency', '#FF0000'), ('Sidebar', 'Latency', '#1E90FF')]
+cloudwatch = boto3.client('cloudwatch')
+
+def send_metrics(time, metric):
+    app_name = 'GuyandJaella'
+    stage = None
+    if 'PROD' in os.environ:
+        stage = 'PROD'
+    else:
+        stage = 'DEV'
+    
+    cloudwatch.put_metric_data(Namespace=app_name,
+        MetricData = [
+                {
+                    'MetricName': metric[0],
+                    'Dimensions': [
+                        {
+                            'Name': 'By App Version',
+                            'Value': os.environ['APP_VERSION']
+                        },
+                        {
+                            'Name': 'By Operation',
+                            'Value': metric[1]
+                        },
+                        {
+                            'Name': 'By Stage',
+                            'Value': stage
+                        },
+                    ],
+                    'Unit': 'Milliseconds',
+                    'Value': time*1000
+                },
+            ])
+    name = '{}.{}'.format(metric[1], metric[2])
+    
+
+
+async def https_get(url: str, metric: tuple) -> str:
+    start = time.time()
+    data = urllib.request.urlopen(url)
+    send_metrics(time.time() - start, metric)
+    data = data.read().decode()
+    return data
 
 
 def inject_sidebar_items(
@@ -25,8 +68,6 @@ def inject_sidebar_items(
 
     item_html = str()
     for key, value in items.items():
-        print('KEY: ', key)
-        print('Value: ', value)
         item_html = item_html + inject_item_info(item_html_snippet, items)
 
     return html.replace('{SIDEBAR_ITEMS}', item_html)
@@ -52,23 +93,21 @@ def inject(template: str, injections: dict):
     for injection in injections:
         key = injection[0]
         value = injection[1]
-        print('KEY: ', key)
-        print('Value: ', value)
         final = final.replace(key, value)
     return final
 
 
-async def create_html(domain, template_uri):
-    sidebar_template_task = asyncio.create_task(https_get('{}sidebar_item.html'.format(get_url_prefix(domain))))
+async def create_html(site_domain, static_domain, template_uri):
+    
+    sidebar_template_task = asyncio.create_task(https_get('{}sidebar_item.html'.format(get_url_prefix(static_domain)), METRICS[1]))
     main_template_task = asyncio.create_task(https_get(
-        '{}{}'.format(get_url_prefix(domain), template_uri)))
+        '{}{}'.format(get_url_prefix(static_domain), template_uri), METRICS[0]))
             
-    sidebar_injections = get_sidebar_injections(domain)
-    main_injections = get_assets_url_injections(domain)
+    sidebar_injections = get_sidebar_injections(static_domain)
+    main_injections = get_assets_url_injections(static_domain)
 
     sidebar_template = await sidebar_template_task
     sidebar = inject(sidebar_template, sidebar_injections)
-    print('sidebar: {}'.format(sidebar))
     side_main_injection = [('{SIDEBAR_ITEMS}', sidebar)]
 
     main_template = await main_template_task
@@ -81,13 +120,11 @@ async def create_html(domain, template_uri):
 def handler(event, context):
     logger.info('EVENT: ', event)
 
-    domain = os.environ['STATIC_DOMAIN']
+    static_domain = os.environ['STATIC_DOMAIN']
+    site_domain = os.environ['SITE_DOMAIN']
     template_uri = os.environ['TEMPLATE_URI']
     status_code = 200
-
-    loop = asyncio.get_event_loop()
-    site = loop.run_until_complete(create_html(domain, template_uri))
-
+    site = loop.run_until_complete(create_html(site_domain, static_domain, template_uri))
     return {
         "statusCode": status_code,
         "body": site,
@@ -96,5 +133,5 @@ def handler(event, context):
         }
     }
 
-
-print(handler({}, {}))
+if 'DEV' in os.environ:
+    handler({}, {})

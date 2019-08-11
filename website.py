@@ -17,7 +17,9 @@ from aws_cdk.aws_s3_assets import Asset
 from aws_cdk.aws_certificatemanager import Certificate
 from aws_cdk.aws_route53 import ARecord, RecordTarget, HostedZone
 from aws_cdk.aws_route53_targets import ApiGatewayDomain
-
+from aws_cdk.aws_events import Rule, Schedule
+from aws_cdk.aws_events_targets import LambdaFunction
+from site_function.site_function import METRICS
 
 class Website(core.Stack):
     api_resources = {
@@ -35,18 +37,44 @@ class Website(core.Stack):
         site_bucket = self.setup_site_bucket()
         distribution = self.create_s3_distirbution(site_bucket)
         lambda_env = {
+            'PROD': 'True',
+            'SITE_DOMAIN': domain,
+            'APP_VERSION': '0.01',
             'STATIC_DOMAIN': distribution.domain_name,
             'TEMPLATE_URI': 'template.html'
         }
+        
+        
+        
+        self.create_metrics('{}Metrics'.format(id), domain, METRICS)
 
+        canary_asset = assets.Asset(self, '{}CanaryAsset'.format(id), path='canary')
         code_asset = assets.Asset(self, '{}FunctionAsset'.format(id), path='site_function')
-        code_obj = S3Code(bucket=code_asset.bucket, key=code_asset.s3_object_key)
+        canary_code = S3Code(bucket=canary_asset.bucket, key=canary_asset.s3_object_key)
+        site_code = S3Code(bucket=code_asset.bucket, key=code_asset.s3_object_key)
+        
+        canary_function = self.create_lambda(
+            id='Canary',
+            code=canary_code,
+            handler='canary.handler',
+            runtime='python3.7',
+            env={},
+            timeout=3)
+            
         function = self.create_lambda(
-            code=code_obj,
+            id='Site',
+            code=site_code,
             handler='site_function.handler',
             runtime='python3.7',
             env=lambda_env,
             timeout=3)
+            
+        
+        Rule(self,
+            '{}CanaryRule'.format(id),
+            enabled=True,
+            schedule=Schedule.cron(),
+            targets=[LambdaFunction(handler=canary_function)])
 
         api = self.create_api(
             function=function,
@@ -122,6 +150,7 @@ class Website(core.Stack):
 
     def create_lambda(
             self,
+            id: str,
             code: S3Code,
             handler: str,
             runtime: str,
@@ -130,12 +159,12 @@ class Website(core.Stack):
 
         role = Role(
             self,
-            '{}FunctionRole'.format(self.id),
+            '{}{}nRole'.format(self.id, id),
             assumed_by=ServicePrincipal('lambda.amazonaws.com'))
 
         return Function(
             self,
-            '{}Function'.format(self.id),
+            '{}{}Function'.format(self.id, id),
             timeout=core.Duration.seconds(timeout),
             code=code,
             handler=handler,
@@ -205,3 +234,6 @@ class Website(core.Stack):
             target=RecordTarget(alias_target=api_target),
             zone=hosted_zone,
             record_name=domain)
+            
+    def create_metrics(self, id, app_name, metrics):
+        pass
