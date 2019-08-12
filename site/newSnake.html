@@ -7,7 +7,7 @@
   <link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
   <title>
-    Snake Profile
+    Add a new Snake
   </title>
   <!--     Fonts and icons     -->
   <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" rel="stylesheet" />
@@ -118,50 +118,16 @@
       <!-- End Navbar -->
       <div class="content">
         <div class="row">
-          <div class="col-md-4">
-            <div class="card card-user">
-              <div class="card-body">
-                <p class="card-text">
-                  <div class="author">
-                    <div class="block block-one"></div>
-                    <div class="block block-two"></div>
-                    <div class="block block-three"></div>
-                    <div class="block block-four"></div>
-                    <a href="javascript:void(0)">
-                      <img id="profilePic" class="avatar" src="assets/img/emilyz.jpg" alt="..." hidden=true style="height: 300px; width: 300px">
-                      <h5 class="title">Mike Andrew</h5>
-                    </a>
-                    <p class="description">
-                      Ceo/Co-Founder
-                    </p>
-                  </div>
-                </p>
-                <div class="card-description">
-                  The best Snake Ever!
-                </div>
-              </div>
-              <div class="card-footer">
-                <div class="button-container">
-                  <button href="javascript:void(0)" class="btn btn-icon btn-round btn-facebook">
-                    <i class="fab fa-facebook"></i>
-                  </button>
-                  <button href="javascript:void(0)" class="btn btn-icon btn-round btn-twitter">
-                    <i class="fab fa-twitter"></i>
-                  </button>
-                  <button href="javascript:void(0)" class="btn btn-icon btn-round btn-google">
-                    <i class="fab fa-google-plus"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
           <div class="col-md-6">
             <div class="card">
               <div class="card-header">
                 <h4 class="card-title">New Snake</h4>
               </div>
-              <div class="card-body" id="newSnakeDiv">
-                <form name="create-snake" id="snakeForm"  method="post" target="hiddenFrame">
+              <div class="card-header" id="creationSuccess" style="display: none;" >
+                <h2 class="card-title">Successfully Create Snake!</h4>
+              </div>
+              <div class="card-body">
+                <form name="create-snake" id="snakeForm" action="https://api.guyandjaella.com/Snakes/create" method="post" target="hiddenFrame">
                   <label>Name</label>
                   <div class="form-group">
                     <input id=snakeName type="text"name="Name"class="form-control">
@@ -188,32 +154,8 @@
                   </div>
                 </form>
               </div>
-              <div class="card-body" id="eventDiv" hidden=true>
-                <form name="create-event" id="snakeEvent" method="post" target="hiddenFrame">
-                  <label>Event</label>
-                  <div class="form-group">
-                    <input id="event" type="text"name="snakeEvent"class="form-control">
-                  </div>
-                  <label>Date</label>
-                  <div class="form-group">
-                    <input id="date" type="text" name="date" class="form-control">
-                  </div>
-                  <label>Measurement</label>
-                  <div class="form-group">
-                    <input id="measurement" type="text" name="measurement" class="form-control">
-                  </div>
-                  <label>MeasurementType</label>
-                  <div class="form-group">
-                    <input id="measurementType" type="text" name="measurementType" class="form-control">
-                  </div>
-                  <label>Notes</label>
-                  <div class="form-group">
-                    <input id="notes" type="text" name="notes" class="form-control">
-                  </div
-                </form>
-              </div>
               <div class="card-footer">
-                <div hidden=true id="imageUpload" class="fileinput fileinput-new" data-provides="fileinput">
+                <div id="imageUpload" class="fileinput fileinput-new" data-provides="fileinput">
                   <div class="fileinput-new img-thumbnail" style="width: 300px; height: 350px;">
                     <img src="placeholder.png"  style="max-width: 100%; min-height: 100%; display: block"  alt="...">
                   </div>
@@ -223,47 +165,10 @@
                     <a href="#" class="btn btn-outline-secondary fileinput-exists" data-dismiss="fileinput">Remove</a>
                   </div>
                 </div>
-                <button type="submit" id="snakeSub" value="submit" class="btn btn-fill btn-primary" onclick=submit()> Submit</button>
-              </div>
-              <div class="card-footer" id='eventSub' hidden=true>
-                <div hidden=true id="imageUpload" class="fileinput fileinput-new" data-provides="fileinput">
-                  <div class="fileinput-new img-thumbnail" style="width: 300px; height: 350px;">
-                    <img src="placeholder.png"  style="max-width: 100%; min-height: 100%; display: block"  alt="...">
-                  </div>
-                  <div id="thumbnail" class="fileinput-preview fileinput-exists img-thumbnail" style="max-height: 350px;"></div>
-                  <div>
-                    <span class="btn btn-outline-secondary btn-file"><span class="fileinput-new">Select image</span><span class="fileinput-exists">Change</span><input type="file" name="..."></span>
-                    <a href="#" class="btn btn-outline-secondary fileinput-exists" data-dismiss="fileinput">Remove</a>
-                  </div>
-                </div>
-                <button type="submit" id="eventSub" value="submit" class="btn btn-fill btn-primary" onclick=eventSubmit()> Submit</button>
+                <button type="submit" value="submit" class="btn btn-fill btn-primary" onclick=submit()> Submit</button>
               </div>
             </div>
-          </div>  
-          <table id="datatable" class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>Event</th>
-                      <th>Date</th>
-                      <th>Measurement</th>
-                      <th>Measurement Type</th>
-                      <th>Notes</th>
-                      <th class="disabled-sorting text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbody">
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <th>Event</th>
-                      <th>Date</th>
-                      <th>Measurement</th>
-                      <th>Measurement Type</th>
-                      <th>Notes</th>
-                      <th class="disabled-sorting text-right">Actions</th>
-                    </tr>
-                  </tfoot>
-                </table>
+          </div>
         </div>  
       </div>    
     </div>
@@ -318,149 +223,7 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/4.0.0/js/jasny-bootstrap.min.js"></script>
   
   <script>
-  
-  function getParameterByName(name, url) {
-    if (!url) url = window.location.href;
-    name = name.replace(/[\[\]]/g, '\\$&');
-    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, ' '));
-  }
-  
-  
-  $(document).ready(function() {
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const petId = urlParams.get('PetId');
-    const name = urlParams.get('Name');
-    console.log(birthday)
-    console.log(name)
-    if(birthday && name) {
-      document.getElementById('newSnakeDiv').hidden = true
-      document.getElementsByClassName('col-md-4')[0].style="margin: auto"
-      document.getElementsByClassName('card-title')[0].innerText="New Event"
-      document.getElementById('eventDiv').hidden = false
-      document.getElementById('snakeSub').hidden = true
-      document.getElementById('eventSub').hidden = false
-      
-    }
-    
-    $.ajax({
-      type: 'GET',
-      url: 'https://api.guyandjaella.com/Pets/getPet',
-      data: {
-        'PetId' : petId,
-        'Name' : name
-      },
-      crossDomain: true,
-      error: function (textStatus, errorThrown) {
-                  console.log(textStatus)
-                  console.log(errorThrown)
-              },
-      success: function (result) {
-        console.log(result)
-        pic = document.getElementById('profilePic')
-        console.log(pic)
-        pic.src = result['Item']['ImageURL']
-        pic.hidden = false
-        petId = result['Item']['PetId']
-        console.log(pic)
-      }
-    })
-    table = $('#datatable')
-    $(document).ready(function() {
-    $.ajax({
-      type: 'GET',
-      url: 'https://api.guyandjaella.com/Pets/listEvents',
-      crossDomain: true,
-      error: function (textStatus, errorThrown) {
-                  console.log(textStatus)
-                  console.log(errorThrown)
-              },
-      success: function (result) {
-          console.log(result)
-          
-          if (result.ResponseMetadata.HTTPStatusCode == 200) {
-            snakeList = result.Items
-            console.log(snakeList)
-            var tbody = document.getElementById('tbody')
-            styleEntrySize = 1
-            snakeColumns = 5
-            snakeColumnSize = snakeColumns + styleEntrySize
-            for (var i = 0; i < result.Count; i++) {
-              var tr = document.createElement('tr');
-              
-              for(var j = 0; j < snakeColumnSize; j++) {
-                tr.appendChild(document.createElement('td'));  
-              }
-              
-              snake = snakeList[i]
-              console.log(snake)
-              console.log(snake.Species)
-              var linkText = document.createTextNode(snake.Name);
-              var nameNode = document.createElement('a');
-              nameNode.appendChild(linkText)
-              nameNode.href='snakeProfile.html?Birthday=' + snake.Birthday + '&' + 'Name=' + snake.Name
-              eventNode = document.createTextNode(snake.EventType)
-              dateNode = document.createTextNode(snake.Date)
-              measurementNode = document.createTextNode('')
-              measurementTypeNode = document.createTextNode('')
-              notesNode = document.createTextNode('')
-              tr.cells[0].appendChild(eventNode)
-              tr.cells[1].appendChild(dateNode)
-              tr.cells[2].appendChild(measurementNode)
-              tr.cells[3].appendChild(measurementTypeNode)
-              tr.cells[4].appendChild(notesNode)
-              
-              tbody.appendChild(tr);
-            }
-            $('#datatable').DataTable({
-            "pagingType": "full_numbers",
-            "lengthMenu": [
-              [10, 25, 50, -1],
-              [10, 25, 50, "All"]
-            ],
-            responsive: true,
-            language: {
-              search: "_INPUT_",
-              searchPlaceholder: "Search records",
-            }
-  
-          });
-        }
-      }
-    })
-  })
-  })
-    
-  function eventSubmit() {
-    
-    var formData = new FormData(document.getElementById("snakeEvent")); 
-    var object = {}
-    formData.forEach(function(value, key){
-        object[key] = value;
-    });
-    
-    var json = JSON.stringify(object);
-    $.ajax({
-      type: 'POST',
-      url: 'https://api.guyandjaella.com/Pets/createEvent',
-      crossDomain: true,
-      data: json,
-      dataType: 'json',
-      success: function(responseData, textStatus, jqXHR) {
-          alert(textStatus)
-      },
-      error: function (responseData, textStatus, errorThrown) {
-          alert('POST failed.');
-          console.log(json)
-      }
-    });
-  }
   function submit() {
-    
     var formData = new FormData(document.getElementById("snakeForm")); 
     image = document.getElementById('thumbnail').lastElementChild.src
     var object = {"ImageData": image};
@@ -468,7 +231,6 @@
     formData.forEach(function(value, key){
         object[key] = value;
     });
-    object ['snakeId'] ='5eae7e5c-e841-4c41-9c1b-d66543a53b83'
     var json = JSON.stringify(object);
     
     console.log(image)
@@ -476,7 +238,7 @@
     
     $.ajax({
       type: 'POST',
-      url: 'https://api.guyandjaella.com/Pets/createPet',
+      url: 'https://api.guyandjaella.com/Snakes/create',
       crossDomain: true,
       data: json,
       dataType: 'json',
@@ -485,7 +247,9 @@
       },
       error: function (responseData, textStatus, errorThrown) {
           alert('POST failed.');
-          console.log(json)
+          console.log(responseData)
+          console.log(textStatus)
+          console.log(errorThrown)
       }
     });
   }

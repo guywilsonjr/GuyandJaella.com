@@ -24,8 +24,9 @@ from site_function.site_function import METRICS
 class Website(core.Stack):
     api_resources = {
         'Snakes': ['GET'],
-        'Home': ['GET']
-    }
+        'Home': ['GET'],
+        'Dashboard': ['GET']
+        }
 
     def __init__(
             self,
@@ -196,7 +197,7 @@ class Website(core.Stack):
             '{}API'.format(self.id),
             domain_name=domain_options,
             handler=function,
-            proxy=False,
+            proxy=True,
             endpoint_types=[
                 EndpointType.EDGE],
             cloud_watch_role=False,
