@@ -6,9 +6,8 @@ from sidebar import Sidebar
 
 
 
-ASSET_REPLACEMENTS = {'assets/': '{}assets/'.format(get_static_url_prefix())}
+ASSET_REPLACEMENTS = {'assets/': '{}assets/'.format(get_static_url_prefix()), '{UPLOAD_PLACEHOLER}': '{}Images/image_upload.jpg'.format(get_static_url_prefix())}
 METRICS = [('MainSite', 'Latency', '#FF0000'), ('Sidebar', 'Latency', '#1E90FF')]
-
 
 async def create_html(site_domain, static_domain, template_uri):
     main_template_task = asyncio.create_task(https_get(
@@ -23,7 +22,7 @@ async def create_html(site_domain, static_domain, template_uri):
 
     return html
 
-HTML_PATH_MAPPINGS = {'/': 'dashboard.html', '/Dashboard': 'dashboard.html', '/Snakes/New': 'newSnake.html', '/Snakes': 'snakes.html'}
+HTML_PATH_MAPPINGS = {'/': 'dashboard.html', '/Dashboard': 'dashboard.html', '/Snake/New': 'newSnake.html', '/Snakes': 'snakes.html'}
 
 def handler(event, context):
     print(event)

@@ -23,10 +23,13 @@ from site_function.site_function import METRICS
 
 class Website(core.Stack):
     api_resources = {
-        'Snakes': ['GET'],
+        'Snakes': ['GET', 'POST'],
         'Home': ['GET'],
-        'Dashboard': ['GET']
+        'Dashboard': ['GET'],
+        'Snake': ['GET']
         }
+        
+    API_CHILD_RESOURCES = {'Snake': 'New'}
 
     def __init__(
             self,
@@ -41,8 +44,7 @@ class Website(core.Stack):
             'PROD': 'True',
             'SITE_DOMAIN': domain,
             'APP_VERSION': '0.01',
-            'STATIC_DOMAIN': distribution.domain_name,
-            'TEMPLATE_URI': 'template.html'
+            'STATIC_DOMAIN': distribution.domain_name
         }
         
         
@@ -197,7 +199,7 @@ class Website(core.Stack):
             '{}API'.format(self.id),
             domain_name=domain_options,
             handler=function,
-            proxy=True,
+            proxy=False,
             endpoint_types=[
                 EndpointType.EDGE],
             cloud_watch_role=False,
@@ -213,6 +215,13 @@ class Website(core.Stack):
         for resource, methods in self.api_resources.items():
             res = api.root.add_resource(resource)
             for method in methods:
+                if resource in self.API_CHILD_RESOURCES:
+                    child_res = res.add_resource(self.API_CHILD_RESOURCES[resource])
+                    child_res.add_method(
+                        http_method=method,
+                        integration=LambdaIntegration(function),
+                        authorization_type=AuthorizationType.NONE)
+                        
                 method = res.add_method(
                     http_method=method,
                     integration=LambdaIntegration(function),
