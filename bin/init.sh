@@ -33,8 +33,9 @@ git pull
 
 npm install -g aws-cdk
 source ../bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt --user
+pip3 install --upgrade pip
+pip3 install -r requirements.txt --user
+deactivate
 cdk --version
 cdk bootstrap 936272581790/us-west-2
 

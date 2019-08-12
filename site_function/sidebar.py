@@ -13,7 +13,10 @@ class Sidebar():
         self.domain = domain
     
     def get_sidebar_item(self, domain: str, title: str, file_path: str, icon: str, item_html_snippet: str) -> list:
-        injections = {'{LINK}': '{}{}'.format(get_url_prefix(), file_path)), '{TITLE}': title, '{ICON}': icon)}
+        injections = {
+            '{LINK}': '{}{}'.format(get_url_prefix(), file_path),
+            '{TITLE}': title,
+            '{ICON}': icon}
         return inject(item_html_snippet, injections)
         
     async def create_sidebar(self) -> str:

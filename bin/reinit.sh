@@ -4,3 +4,4 @@ export SITE_DOMAIN='guyandjaella.com' && export STATIC_DOMAIN="d3fqzsbh169wiu.cl
 alias gstat='git status'
 alias gpush='git push origin master'
 alias gfet='git fetch'
+alias deploy='cdk deploy --require-approval never'
