@@ -5,7 +5,7 @@ from site_utils import https_get, inject, get_static_url_prefix, get_site_url_pr
 
 
 class Sidebar():
-    SIDEBAR_ITEMS = [('Home', '', 'tim-icons ')('Dashboard', 'Dashboard', 'tim-icons icon-components'), ('New Snake', 'Snakes', 'tim-icons icon-simple-add')]
+    SIDEBAR_ITEMS = [('Home', '', 'tim-icons icon-bank'),('Dashboard', 'Dashboard', 'tim-icons icon-components'), ('New Snake', 'Snake/New', 'tim-icons icon-simple-add'), ('Snakes', 'Snakes', 'tim-icons icon-bullet-list-67')]
     def __init__(self, domain: str):
         self.domain = domain
     
