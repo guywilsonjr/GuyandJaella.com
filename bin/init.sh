@@ -30,7 +30,9 @@ git config credential.helper 'cache --timeout=999999'
 # git config --global credential.helper '!aws codecommit credential-helper $@'
 git config --global credential.UseHttpPath true
 git pull
-
+curl -O https://bootstrap.pypa.io/get-pip.py
+python3 get-pip.py --user
+rm get-pip.py
 npm install -g aws-cdk
 source ../bin/activate
 pip3 install --upgrade pip
