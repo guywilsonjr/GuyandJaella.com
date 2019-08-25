@@ -20,6 +20,8 @@ from aws_cdk.aws_route53_targets import ApiGatewayDomain
 from aws_cdk.aws_events import Rule, Schedule
 from aws_cdk.aws_events_targets import LambdaFunction
 from site_function.site_function import METRICS
+from api_custom_domain import ApiCustomDomain
+
 
 class Website(core.Stack):
     api_resources = {
@@ -27,8 +29,8 @@ class Website(core.Stack):
         'Home': ['GET'],
         'Dashboard': ['GET'],
         'Snake': ['GET']
-        }
-        
+    }
+
     API_CHILD_RESOURCES = {'Snake': 'New'}
 
     def __init__(
@@ -46,16 +48,22 @@ class Website(core.Stack):
             'APP_VERSION': '0.01',
             'STATIC_DOMAIN': distribution.domain_name
         }
-        
-        
-        
+
         self.create_metrics('{}Metrics'.format(id), domain, METRICS)
 
-        canary_asset = assets.Asset(self, '{}CanaryAsset'.format(id), path='canary')
-        code_asset = assets.Asset(self, '{}FunctionAsset'.format(id), path='site_function')
-        canary_code = S3Code(bucket=canary_asset.bucket, key=canary_asset.s3_object_key)
-        site_code = S3Code(bucket=code_asset.bucket, key=code_asset.s3_object_key)
-        
+        canary_asset = assets.Asset(
+            self, '{}CanaryAsset'.format(id), path='canary')
+        code_asset = assets.Asset(
+            self,
+            '{}FunctionAsset'.format(id),
+            path='site_function')
+        canary_code = S3Code(
+            bucket=canary_asset.bucket,
+            key=canary_asset.s3_object_key)
+        site_code = S3Code(
+            bucket=code_asset.bucket,
+            key=code_asset.s3_object_key)
+
         canary_function = self.create_lambda(
             id='Canary',
             code=canary_code,
@@ -63,7 +71,7 @@ class Website(core.Stack):
             runtime='python3.7',
             env={},
             timeout=3)
-            
+
         function = self.create_lambda(
             id='Site',
             code=site_code,
@@ -71,23 +79,24 @@ class Website(core.Stack):
             runtime='python3.7',
             env=lambda_env,
             timeout=3)
-            
-        
+
         Rule(self,
-            '{}CanaryRule'.format(id),
-            enabled=True,
-            schedule=Schedule.cron(),
-            targets=[LambdaFunction(handler=canary_function)])
+             '{}CanaryRule'.format(id),
+             enabled=True,
+             schedule=Schedule.cron(),
+             targets=[LambdaFunction(handler=canary_function)])
 
         api = self.create_api(
             function=function,
             domain=domain,
             resources=self.api_resources,
             cert_arn=cert_arn)
-        self.route_domain_to_api(
-            domain=domain,
-            api=api,
-            hosted_zone_id=hosted_zone_id)
+
+        ApiCustomDomain(
+            self,
+            '{}CustomDomain'.format(id),
+            apex_domain=domain,
+            api=api)
 
     def setup_site_bucket(self) -> Bucket:
         # TODO use more restrictive rule
@@ -125,7 +134,8 @@ class Website(core.Stack):
             bucket=logging_bucket, include_cookies=True)
         site_identity = CfnCloudFrontOriginAccessIdentity(
             self,
-            'SiteCFIdentity'.format(self.id),
+            '{}SiteCFIdentity'.format(
+                self.id),
             cloud_front_origin_access_identity_config=CfnCloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfigProperty(
                 comment='Website Origin Identity'))
 
@@ -216,34 +226,15 @@ class Website(core.Stack):
             res = api.root.add_resource(resource)
             for method in methods:
                 if resource in self.API_CHILD_RESOURCES:
-                    child_res = res.add_resource(self.API_CHILD_RESOURCES[resource])
+                    child_res = res.add_resource(
+                        self.API_CHILD_RESOURCES[resource])
                     child_res.add_method(
                         http_method=method,
                         integration=LambdaIntegration(function),
                         authorization_type=AuthorizationType.NONE)
-                        
+
                 method = res.add_method(
                     http_method=method,
                     integration=LambdaIntegration(function),
                     authorization_type=AuthorizationType.NONE)
         return api
-
-    def route_domain_to_api(
-            self,
-            domain: str,
-            api: RestApi,
-            hosted_zone_id: str) -> None:
-        api_target = ApiGatewayDomain(api.domain_name)
-        hosted_zone = HostedZone.from_hosted_zone_attributes(
-            self, '{}HostedZone'.format(
-                self.id), hosted_zone_id=hosted_zone_id, zone_name=domain)
-        ARecord(
-            self,
-            '{}RouteRecord'.format(
-                self.id),
-            target=RecordTarget(alias_target=api_target),
-            zone=hosted_zone,
-            record_name=domain)
-            
-    def create_metrics(self, id, app_name, metrics):
-        pass
