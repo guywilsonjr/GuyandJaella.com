@@ -1,7 +1,12 @@
 import os
 import asyncio
-from .site_utils import get_static_url_prefix, https_get, inject
-from .sidebar import Sidebar
+if 'PROD' in os.environ:
+    from site_utils import get_static_url_prefix, https_get, inject
+    from sidebar import Sidebar
+else:
+    from .site_utils import get_static_url_prefix, https_get, inject
+    from .sidebar import Sidebar
+
 
 
 ASSET_REPLACEMENTS = {'assets/': '{}assets/'.format(get_static_url_prefix()),

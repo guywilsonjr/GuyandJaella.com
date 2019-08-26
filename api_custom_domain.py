@@ -10,7 +10,6 @@ from aws_cdk.aws_route53 import HostedZone
 from permissions import ROUTE_53_DNS_ENSURER_POLICY_STATEMENT
 from dns_ensurer import DnsEnsurer
 
-loop = get_event_loop()
 class APICustomDomain(Stack):
     def __init__(
             self,
@@ -22,13 +21,13 @@ class APICustomDomain(Stack):
 
         super().__init__(app, id)
         
-    async def setup(self, domain: str, sats: list) -> None:
+    async def setup(self, id: str, domain: str, sats: list) -> None:
         hosted_zone_task = create_task(self.create_hosted_zone(domain=domain))
         potential_cert_arn = await self.get_potential_cert(domain=domain, sats=sats)
         if potential_cert_arn:
             self.cert = Certificate.from_certificate_arn(
                 self,
-                '{}ApiCert'.format(id),
+                '{}APICert'.format(id),
                 certificate_arn=potential_cert_arn)
             self.create_dno(domain=domain)
             await hosted_zone_task
@@ -36,7 +35,7 @@ class APICustomDomain(Stack):
             await hosted_zone_task
             self.cert = DnsValidatedCertificate(
                 self,
-                '{}ApiCert'.format(id),
+                '{}APICert'.format(id),
                 hosted_zone=self.zone,
                 domain_name=domain,
                 region='us-east-1')

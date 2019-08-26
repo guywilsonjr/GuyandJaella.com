@@ -1,6 +1,9 @@
 import asyncio
 import os
-from .site_utils import https_get, inject, get_static_url_prefix, get_site_url_prefix
+if 'PROD' in os.environ:
+    from site_utils import https_get, inject, get_static_url_prefix, get_site_url_prefix
+else:
+    from .site_utils import https_get, inject, get_static_url_prefix, get_site_url_prefix
 
 
 

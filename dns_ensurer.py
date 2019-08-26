@@ -19,14 +19,10 @@ class DnsEnsurer(Stack):
             txt: str,
             env: dict,
             policies: PolicyStatement,
-            domain: str) -> None:
+            domain: str,
+            hosted_zone_id: str) -> None:
         super().__init__(app, id)
-
-        self.zone = HostedZone(
-            self,
-            'HostedZone{}'.format(domain),
-            zone_name=domain)
-        env['HOSTED_ZONE_ID'] = self.zone.hosted_zone_id
+        env['HOSTED_ZONE_ID'] = hosted_zone_id
 
         self.function = SingletonFunction(
             self,
