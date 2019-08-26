@@ -1,6 +1,6 @@
 import asyncio
 import os
-from site_utils import https_get, inject, get_static_url_prefix, get_site_url_prefix
+from .site_utils import https_get, inject, get_static_url_prefix, get_site_url_prefix
 
 
 

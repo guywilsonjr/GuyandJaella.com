@@ -6,8 +6,6 @@ export SITE_CERT="arn:aws:acm:us-east-1:936272581790:certificate/831328ac-9045-4
 export SITE_HOSTED_ZONE_ID="ZACA05K52IZCC"
 export APP_VERSION="0.01"
 export DEV="True"
-cd env/GuyandJaella.com
-export PYTHONPATH=$(pwd)/site_function
 
 alias gstat='git status'
 alias gpush='git push origin master'

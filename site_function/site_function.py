@@ -1,7 +1,7 @@
 import os
 import asyncio
-from site_utils import get_static_url_prefix, https_get, inject
-from sidebar import Sidebar
+from .site_utils import get_static_url_prefix, https_get, inject
+from .sidebar import Sidebar
 
 
 ASSET_REPLACEMENTS = {'assets/': '{}assets/'.format(get_static_url_prefix()),

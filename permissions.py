@@ -1,4 +1,4 @@
-from aws_cdk import aws_iam as iam
+from aws_cdk.aws_iam import PolicyStatement, ServicePrincipal, Anyone, PolicyDocument
 
 MINIMAL_FUNCTION_ACTIONS = ['xray:PutTraceSegments',
                             'xray:PutTelemetryRecords',
@@ -14,28 +14,35 @@ MINIMAL_FUNCTION_ACTIONS = ['xray:PutTraceSegments',
 DDB_ACTIONS = ['dynamodb:Scan', 'dynamodb:PutItem']
 API_INVOKE_STATEMENT_ACTION = 'execute-api:Invoke'
 
+ROUTE_53_DNS_ENSURER_ACTIONS = [
+    'route53domains:GetDomainDetail',
+    'route53domains:UpdateDomainNameservers',
+    'route53:GetHostedZone']
 
-MINIMAL_FUNCTION_POLICY_STATEMENT = iam.PolicyStatement(
+ROUTE_53_DNS_ENSURER_POLICY_STATEMENT = PolicyStatement(
+    actions=MINIMAL_FUNCTION_ACTIONS + ROUTE_53_DNS_ENSURER_ACTIONS,
+    resources=['*'])
+
+MINIMAL_FUNCTION_POLICY_STATEMENT = PolicyStatement(
     actions=MINIMAL_FUNCTION_ACTIONS, resources=['*'])
 
-MINIMAL_API_POLICY_STATEMENT = iam.PolicyStatement(
+MINIMAL_API_POLICY_STATEMENT = PolicyStatement(
     actions=MINIMAL_FUNCTION_ACTIONS,
     resources=['*'],
-    principals=[iam.ServicePrincipal('apigateway.amazonaws.com')])
+    principals=[ServicePrincipal('apigateway.amazonaws.com')])
 
-PUBLIC_INVOKE_POLICY_STATEMENT = iam.PolicyStatement(
+PUBLIC_INVOKE_POLICY_STATEMENT = PolicyStatement(
     actions=[API_INVOKE_STATEMENT_ACTION],
     resources=['*'],
-    principals=[iam.Anyone()])
+    principals=[Anyone()])
 
 
-MINIMAL_PUBLIC_API_POLICY_DOCUMENT = iam.PolicyDocument(
+MINIMAL_PUBLIC_API_POLICY_DOCUMENT = PolicyDocument(
     statements=[
         MINIMAL_API_POLICY_STATEMENT,
         PUBLIC_INVOKE_POLICY_STATEMENT])
 
 
-def get_ddb_function_statement(table_arns):
-    return iam.PolicyStatement(
+DDB_FUNCTION_POLICY_STATEMENT = PolicyStatement(
         actions=MINIMAL_FUNCTION_ACTIONS + DDB_ACTIONS,
-        resources=table_arns)
+        resources=['*'])

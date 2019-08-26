@@ -20,8 +20,8 @@ sudo rm /usr/bin/python3.6
 # sudo cp /usr/bin/python3.6 /usr/bin/python3.6.backup
 sudo cp /usr/bin/python3.7 /usr/bin/python3.6
 sudo alternatives --set python /usr/bin/python3.6
-python3 -m venv env
-cd env
+python3 -m venv ${REPO_NAME}Env
+${REPO_NAME}Env
 
 # Configure git
 git clone https://github.com/guywilsonjr/${REPO_NAME}
@@ -37,9 +37,33 @@ npm install -g aws-cdk
 source ../bin/activate
 pip3 install --upgrade pip
 pip3 install -r requirements.txt --user
-deactivate
+
 cdk --version
 cdk bootstrap 936272581790/us-west-2
 
-source reinit.sh
+source bin/reinit.sh
 
+domain_name = 'guyandjaella.com'
+apex_domain = domain_name
+env = {'DOMAIN': apex_domain}
+code_txt = None
+with open('ensure_ns.py', 'r') as content:
+    code_txt = content.read()
+
+r53 = boto3.client('route53')
+acm = boto3.client('acm', region_name='us-east-1')
+
+for zone in r53.list_hosted_zones()['HostedZones']:
+    zone_name = zone['Name'][:-1]
+    if zone_name == apex_domain:
+        hosted_zone_id = zone['Id'].partition('/hostedzone/')[2]
+        print('HostedZone Found:{}\n{}'.format(zone_name, hosted_zone_id))
+        certs = acm.list_certificates(CertificateStatuses=['ISSUED'])[
+            'CertificateSummaryList']
+        potential_cert_arn = [cert['CertificateArn']
+                               for cert in certs if cert['DomainName'] == domain_name]
+        if potential_cert_arn:
+            cert_arn = potential_cert_arn[0]
+            print('Certificate Found:{}'.format(certs))
+            full_cert = acm.describe_certificate(CertificateArn=cert_arn)
+            print(full_cert)
