@@ -1,11 +1,10 @@
 import asyncio
 import os
 if 'PROD' in os.environ:
-    from site_utils import https_get, inject, get_static_url_prefix, get_site_url_prefix
+    from site_utils import fetch_file_txt, inject, get_site_url_prefix, SIDEBAR_SITE_METRIC
 else:
-    from .site_utils import https_get, inject, get_static_url_prefix, get_site_url_prefix
-
-
+    from .site_utils import fetch_file_txt, inject, get_site_url_prefix, SIDEBAR_SITE_METRIC
+    
 
 class Sidebar():
     SIDEBAR_ITEMS = [('Home', '', 'tim-icons icon-bank'),('Dashboard', 'Dashboard', 'tim-icons icon-components'), ('New Snake', 'Snake/New', 'tim-icons icon-simple-add'), ('Snakes', 'Snakes', 'tim-icons icon-bullet-list-67')]
@@ -20,10 +19,7 @@ class Sidebar():
         return inject(item_html_snippet, injections)
         
     async def create_sidebar(self) -> str:
-        sidebar_template_task = asyncio.create_task(
-            https_get('{}sidebar_item.html'.format(
-                get_static_url_prefix()
-                ), ('Sidebar', 'Latency', '#1E90FF'), 'SidebarLatency'))
+        sidebar_template_task = asyncio.create_task(fetch_file_txt(file='sidebar_item.html', metric=SIDEBAR_SITE_METRIC, from_disk=True))
         self.html = ''
         snippet = await sidebar_template_task
         for title, uri, icon in self.SIDEBAR_ITEMS:

@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 
-from aws_cdk import core
+from aws_cdk.core import App
 import os
 from website import Website
-app = core.App()
-'''
-
-'''
-SITE_DOMAIN = os.environ['SITE_DOMAIN']
+app = App()
 
 Website(
     app,
     'GuyandJaella',
-    domain=SITE_DOMAIN
+    domain='guyandjaella.com'
 )
 app.synth()

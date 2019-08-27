@@ -1,7 +1,7 @@
 import os
 from aws_cdk.core import App, Stack, Duration
 from aws_cdk.aws_cloudwatch import Metric, Unit
-from site_function.site_function import METRICS
+from site_function.site_utils import METRICS
 
 
 class AppMetrics(Stack):

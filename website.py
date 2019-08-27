@@ -2,20 +2,19 @@ from asyncio import run, create_task
 from aws_cdk.core import Duration, App, Stack, RemovalPolicy, Resource
 from aws_cdk.aws_s3_deployment import Source, BucketDeployment
 from aws_cdk.aws_lambda import Function, S3Code, Runtime, Tracing, InlineCode
-from aws_cdk.aws_apigateway import LambdaRestApi, RestApi, LambdaIntegration, EndpointType, AuthorizationType, DomainNameOptions, StageOptions, MethodLoggingLevel
+from aws_cdk.aws_apigateway import LambdaRestApi, RestApi, LambdaIntegration, EndpointType, AuthorizationType, DomainNameOptions, StageOptions, MethodLoggingLevel, DomainName
 from aws_cdk.aws_iam import ServicePrincipal, Role
 from aws_cdk.aws_cloudfront import CloudFrontWebDistribution, CloudFrontAllowedMethods, Behavior, LoggingConfiguration, CfnCloudFrontOriginAccessIdentity, S3OriginConfig, SourceConfiguration
 from aws_cdk.aws_s3 import Bucket, CorsRule, HttpMethods
 from aws_cdk.aws_s3_assets import Asset
 from aws_cdk.aws_certificatemanager import Certificate
-from aws_cdk.aws_route53 import ARecord, RecordTarget, HostedZone
+from aws_cdk.aws_route53 import ARecord, RecordTarget, HostedZone, AliasRecordTargetConfig
 from aws_cdk.aws_route53_targets import ApiGateway
 from aws_cdk.aws_events import Rule, Schedule
 from aws_cdk.aws_events_targets import LambdaFunction
-from site_function.site_function import METRICS
+from site_function.site_utils import METRICS
 from permissions import MINIMAL_FUNCTION_POLICY_STATEMENT, MINIMAL_PUBLIC_API_POLICY_DOCUMENT, DDB_FUNCTION_POLICY_STATEMENT
 from app_metrics import AppMetrics
-from api_custom_domain import APICustomDomain
 import os
 import boto3
 from asyncio import run, create_task, get_event_loop
@@ -48,6 +47,7 @@ class Website(Stack):
         run(self.setup(id=id, domain=domain))
 
     async def setup(self, id:str, domain: str) -> None:
+        print('SetupDomain: {}'.format(domain))
         bucket_task = create_task(self.create_site_bucket(id=id))
         canary_task = create_task(self.create_canary_function(id=id))
         
@@ -90,8 +90,7 @@ class Website(Stack):
         self.site_function = await self.create_site_function(id=id, domain=domain, cdn_name=cdn_name)
         acd_id = '{}APICustomDomain'.format(id)
         
-        
-        await self.acd_setup(id=acd_id,domain=domain, sats=['guyandjaella.com', '*.guyandjaella.com'])
+        await self.acd_setup(id=acd_id, domain=domain, sats=[domain, '*.{}'.format(domain)])
         stage_options = StageOptions(cache_cluster_enabled=True, caching_enabled=True, cache_cluster_size='0.5', data_trace_enabled=True, cache_ttl=Duration.seconds(30), metrics_enabled=True, tracing_enabled=True, logging_level=MethodLoggingLevel.INFO)
         self.api = LambdaRestApi(
             self,
@@ -115,11 +114,14 @@ class Website(Stack):
             
         for resource, methods in self.api_resources.items():
             added_resource = self.api.root.add_resource(resource)
+            print('Added Resource: {}'.format(resource))
             tasks = set()
             for method in methods:
                 tasks.add(create_task(self.create_api_method(resource=resource, added_resource=added_resource, method=method)))
             for task in tasks:
                 await task
+                
+        self.www_dn = DomainName(self, '{}WWWCDN'.format(id), mapping=self.api, certificate=self.cert, domain_name='www.{}'.format(domain), endpoint_type=EndpointType.EDGE)
         
         target = ApiGateway(self.api)
         self.dns_record = ARecord(
@@ -127,21 +129,22 @@ class Website(Stack):
             '{}DNSRecord'.format(id),
             target=RecordTarget(alias_target=target),
             zone=self.zone,
-            record_name='www.{}'.format(domain))
-            
+            record_name=domain)
         self.canary_function = await canary_task
         
     async def acd_setup(self, id: str, domain: str, sats: list) -> None:
         hosted_zone_task = create_task(self.create_hosted_zone())
         potential_cert_arn = await self.get_potential_cert(domain=domain, sats=sats)
         if potential_cert_arn:
+            print('Cert found: {}'.format(potential_cert_arn))
             self.cert = Certificate.from_certificate_arn(
                 self,
                 '{}APICert'.format(id),
                 certificate_arn=potential_cert_arn)
-            self.create_dno(domain=domain)
+            self.create_dno(domain)
             await hosted_zone_task
         else:
+            print('Cert not found for domain: {}'.format(domain))
             await hosted_zone_task
             self.cert = DnsValidatedCertificate(
                 self,
@@ -196,13 +199,16 @@ class Website(Stack):
             zone_name=self.zone_name)
 
     async def create_api_method(self, resource: str, added_resource: Resource, method: str):
-        if added_resource in self.API_CHILD_RESOURCES:
+        print('Added Method: {}'.format(method))
+        if resource in self.API_CHILD_RESOURCES:
             child_res = added_resource.add_resource(
                 self.API_CHILD_RESOURCES[resource])
             child_res.add_method(
                 http_method=method,
                 integration=LambdaIntegration(self.site_function),
                 authorization_type=AuthorizationType.NONE)
+            print('Added Child resource: {}/{}'.format(resource, self.API_CHILD_RESOURCES[resource]))
+
 
         method = added_resource.add_method(
             http_method=method,
@@ -265,6 +271,7 @@ class Website(Stack):
         )
     
     async def create_canary_function(self, id: str) -> Function:
+        function = None
         with open('canary/canary.py', 'r') as code:
             canary_code = code.read()
             function = Function(
@@ -272,7 +279,7 @@ class Website(Stack):
                 '{}CanaryFunction'.format(id),
                 timeout=Duration.seconds(3),
                 code=InlineCode(canary_code),
-                handler='canary.handler',
+                handler='index.handler',
                 tracing=Tracing.ACTIVE,
                 initial_policy=[MINIMAL_FUNCTION_POLICY_STATEMENT],
                 runtime=Runtime(
@@ -286,5 +293,7 @@ class Website(Stack):
              enabled=True,
              schedule=Schedule.cron(),
              targets=[LambdaFunction(handler=function)])
+             
+        return function
 
     
