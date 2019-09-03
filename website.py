@@ -92,20 +92,24 @@ class Website(Stack):
         
         await self.acd_setup(id=acd_id, domain=domain, sats=[domain, '*.{}'.format(domain)])
         stage_options = StageOptions(cache_cluster_enabled=True, caching_enabled=True, cache_cluster_size='0.5', data_trace_enabled=True, cache_ttl=Duration.seconds(30), metrics_enabled=True, tracing_enabled=True, logging_level=MethodLoggingLevel.INFO)
+        
+        proxy_setting = False
         self.api = LambdaRestApi(
             self,
             '{}API'.format(id),
             domain_name=self.dno,
             handler=self.site_function,
             deploy_options = stage_options,
-            proxy=False,
+            minimum_compression_size=2000,
             endpoint_types=[
                 EndpointType.EDGE],
             cloud_watch_role=False,
             policy=MINIMAL_PUBLIC_API_POLICY_DOCUMENT,
             deploy=True,
             default_method_options={
-                'authorizationType': AuthorizationType.NONE})
+                'authorizationType': AuthorizationType.NONE},
+            proxy=proxy_setting
+                )
 
         self.api.root.add_method(
             http_method='GET',
@@ -244,7 +248,7 @@ class Website(Stack):
         env = {
             'PROD': 'True',
             'SITE_DOMAIN': domain,
-            'APP_VERSION': '0.01',
+            'APP_VERSION': '0.02',
             'STATIC_DOMAIN': cdn_name,
             'PROD': 'True'
         }

@@ -1,3 +1,7 @@
 __pycache__/**
 */__pycache__*/*
 cdk.out/*
+site_function/bin/*
+site_function/lib/*
+site_function/lib64
+site_function/pyvenv.cfg
