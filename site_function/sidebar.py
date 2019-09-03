@@ -7,9 +7,11 @@ else:
     
 
 class Sidebar():
-    SIDEBAR_ITEMS = [('Home', '', 'tim-icons icon-bank'),('Dashboard', 'Dashboard', 'tim-icons icon-components'), ('New Snake', 'Snake/New', 'tim-icons icon-simple-add'), ('Snakes', 'Snakes', 'tim-icons icon-bullet-list-67')]
-    def __init__(self):
+    SIDEBAR_ITEMS = [('Home', '', 'tim-icons icon-bank'),('Dashboard', 'Dashboard', 'tim-icons icon-components'), ('New Snake', 'Snakes/New', 'tim-icons icon-simple-add'), ('Snakes', 'Snakes', 'tim-icons icon-bullet-list-67')]
+    def __init__(self, template_uri: str):
+        self._template_uri = template_uri
         pass
+
     
     def get_sidebar_item(self, title: str, uri: str, icon: str, item_html_snippet: str) -> list:
         injections = {
@@ -20,7 +22,7 @@ class Sidebar():
         
         
     async def create_sidebar(self) -> str:
-        sidebar_template_task = asyncio.create_task(fetch_file_txt(file='sidebar_item.html', metric=SIDEBAR_SITE_METRIC, from_disk=True))
+        sidebar_template_task = asyncio.create_task(fetch_file_txt(file=self._template_uri, metric=SIDEBAR_SITE_METRIC, from_disk=True))
         self.html = ''
         snippet = await sidebar_template_task
         for title, uri, icon in self.SIDEBAR_ITEMS:
